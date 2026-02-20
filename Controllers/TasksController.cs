@@ -1,62 +1,65 @@
-using Microsoft.AspNetCore.Http;
+
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
-
-using TaskManager.Models;
+using task_manager_api.Controllers;
+using task_manager_api.Interfaces;
+using task_manager_api.Models;
 using TaskManager.Data;
 namespace TaskManager.API
 {
-    [Route("tasks")]
     [ApiController]
+    [Route("api/tasks")]
     public class TasksController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
+        private readonly ITaskService _taskItem;
 
-        public TasksController(ApplicationDbContext context)
-        {
-            _context = context;
-        }
+        public TasksController(ITaskService taskItem) => _taskItem = taskItem;
 
         [HttpGet]
-        public async Task<IActionResult> Get()
+        public async Task<ActionResult<List<TaskItem>>> GetTaskByUser(int userId)
         {
-            
-            var tasks = await _context.Tasks.ToListAsync();
+            var tasks = await _taskItem.GetAllTaskByUserAsync(userId);
+            if (tasks == null || tasks.Count == 0) return NotFound("No tasks found for this user");
             return Ok(tasks);
         }
 
-        [HttpPost]
-        public async Task<IActionResult> Create([FromBody] TaskItem task)
+        [HttpGet("{id}")]
+        public async Task<ActionResult> GetById(int id)
         {
-            
-            _context.Tasks.Add(task);
-            await _context.SaveChangesAsync();
-            return CreatedAtAction(nameof(Get), new { id = task.Id }, task);
+            var task = await _taskItem.GetByIdAsync(id);
+            if (task == null)
+            {
+                return NotFound($"Task with Id {id} not found");
+            }
+            return Ok(task);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Create(TaskItem task)
+        {
+            var createdTask = await _taskItem.CreateTask(task);
+
+            return CreatedAtAction(
+                nameof(GetById),
+                new { id = createdTask.Id },
+                createdTask
+            );
         }
 
         [HttpPut("{id}")] 
-        public async Task<IActionResult> Update(int id, [FromBody] TaskItem updated)
+        public async Task<IActionResult> Update(int id, TaskItem updated)
         {
-            var task = await _context.Tasks.FindAsync(id);
-            if (task == null) return NotFound();
-
-            task.Title = updated.Title;
-            task.IsDone = updated.IsDone;
-            await _context.SaveChangesAsync();
-
+            var task = await _taskItem.UpdateTask(id, updated);
+            if (task == null) return NotFound($"Task with Id {id} not found");
             return Ok(task);
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var task = await _context.Tasks.FindAsync(id);
-            if (task == null) return NotFound();
-
-            _context.Tasks.Remove(task);
-            await _context.SaveChangesAsync();
-
+            var deleteId = await _taskItem.DeleteTask(id);
+            if (!deleteId) return NotFound($"Task with Id {id} not found");
             return NoContent();
         }
     }

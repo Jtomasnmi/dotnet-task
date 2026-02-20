@@ -1,4 +1,4 @@
-namespace task_manager_api.Migrations.Models
+namespace task_manager_api.Models
 {
     public class TaskItem
     {
