@@ -8,7 +8,7 @@
 7. add funtionality for user (CRUD)
 8. configure cors for api integration to front end from program.cs
 9. register services I created or dependency injection into program.cs so that i can use services vice versa.
-10. lastly i configured the postgresql it depends on credentials please change if neccessary.
+10. lastly I configured the postgresql it depends on credentials please change if neccessary.
 # .NET Task Evaluator API – Technical Exam
 
 ⏰ **Estimated Time**: 2–3 hours  
