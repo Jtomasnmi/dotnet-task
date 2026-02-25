@@ -1,57 +1,49 @@
 
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using System.Threading.Tasks;
-using task_manager_api.Controllers;
-using task_manager_api.Interfaces;
 using task_manager_api.Models;
-using TaskManager.Data;
+using task_manager_api.Interfaces;
+using task_manager_api.Contracts.Requests.DTO;
+
 namespace TaskManager.API
 {
     [ApiController]
-    [Route("api/tasks")]
+    [Route("api/[controller]")]
     public class TasksController : ControllerBase
     {
         private readonly ITaskService _taskItem;
 
         public TasksController(ITaskService taskItem) => _taskItem = taskItem;
 
-        [HttpGet]
+        [HttpGet("{userId}")]
         public async Task<ActionResult<List<TaskItem>>> GetTaskByUser(int userId)
         {
-            var tasks = await _taskItem.GetAllTaskByUserAsync(userId);
-            if (tasks == null || tasks.Count == 0) return NotFound("No tasks found for this user");
+            var tasks = await _taskItem.GetTaskAsync(userId);
             return Ok(tasks);
         }
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult> GetById(int id)
-        {
-            var task = await _taskItem.GetByIdAsync(id);
-            if (task == null)
-            {
-                return NotFound($"Task with Id {id} not found");
-            }
-            return Ok(task);
-        }
-
         [HttpPost]
-        public async Task<IActionResult> Create(TaskItem task)
+        public async Task<ActionResult> CreateTask(TasksDTO taskdto)
         {
-            var createdTask = await _taskItem.CreateTask(task);
+            var createdTask = await _taskItem.CreateTask(taskdto);
 
-            return CreatedAtAction(
-                nameof(GetById),
-                new { id = createdTask.Id },
-                createdTask
-            );
+            if (createdTask == null) return NotFound(new
+            {
+                success = false,
+                message = "Task not created."
+            });
+
+            return Ok(createdTask);
         }
 
-        [HttpPut("{id}")] 
-        public async Task<IActionResult> Update(int id, TaskItem updated)
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(int id, TasksDTO taskdto)
         {
-            var task = await _taskItem.UpdateTask(id, updated);
-            if (task == null) return NotFound($"Task with Id {id} not found");
+            var task = await _taskItem.UpdateTask(id, taskdto);
+            if (task == null) return NotFound(new
+            {
+                success = false,
+                message = $"Task id {id} was not found"
+            });
             return Ok(task);
         }
 
@@ -59,8 +51,16 @@ namespace TaskManager.API
         public async Task<IActionResult> Delete(int id)
         {
             var deleteId = await _taskItem.DeleteTask(id);
-            if (!deleteId) return NotFound($"Task with Id {id} not found");
-            return NoContent();
+            if (!deleteId) return NotFound(new
+            {
+                success = false,
+                message = $"Task with Id {id} not found"
+            });
+            return Ok(new
+            {
+                success = true,
+                message = $"Task id {id} deleted successfully"
+            });
         }
     }
 }
