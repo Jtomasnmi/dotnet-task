@@ -1,3 +1,14 @@
+# My steps for the development of assessment
+1. the solution is missing so I create a new sln
+2. missing packages so I install swashbuckle, brcypt
+3. adjust the structure of models for TASKS/USER
+4. I create interfaces then implement those to Data/ taskrepository and userRepository
+5. create repository which contain all of my implementation of method
+6. on controller i call all the return value from my repository/services
+7. add funtionality for user (CRUD)
+8. configure cors for api integration to front end from program.cs
+9. register services I created or dependency injection into program.cs so that i can use services vice versa.
+10. lastly i configured the postgresql it depends on credentials please change if neccessary.
 # .NET Task Evaluator API – Technical Exam
 
 ⏰ **Estimated Time**: 2–3 hours  
